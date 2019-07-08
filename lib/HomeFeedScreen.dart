@@ -4,14 +4,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:newnewnews/MyInAppBrowser.dart';
 
 import 'package:share/share.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+//import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:timeago/timeago.dart' as timeAgo;
 import './globalStore.dart' as globalStore;
 //import './SearchScreen.dart' as SearchScreen;
-import './model.dart';
+import 'package:newnewnews/model.dart';
+import 'package:transparent_image/transparent_image.dart';
+import 'package:flutter_inappbrowser/flutter_inappbrowser.dart';
+//import './MyInAppBrowser.dart' as MyInAppBrowser;
+
 
 
 class HomeFeedScreen extends StatefulWidget {
@@ -20,15 +25,20 @@ class HomeFeedScreen extends StatefulWidget {
   @override
   _HomeFeedScreenState createState() => _HomeFeedScreenState();
 }
-
+ 
 class _HomeFeedScreenState extends State<HomeFeedScreen> {
   var data;
   var sSelection = "techcrunch";
   DataSnapshot snapshot;
   var snapSources;
   //TimeAgo ta =  TimeAgo();
-  final FlutterWebviewPlugin flutterWebviewPlugin = FlutterWebviewPlugin();
+  //final FlutterWebviewPlugin flutterWebviewPlugin = FlutterWebviewPlugin();
+  InAppWebViewController webView;
+  String url = "";
+  double progress = 0;
   final TextEditingController _controller = TextEditingController();
+  final MyInAppBrowser inAppBrowser =  MyInAppBrowser();
+  
   Future getData() async {
     await globalStore.logIn;
     if (await globalStore.userDatabaseReference == null) {
@@ -43,12 +53,18 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
       });
     }
     final itemsData = await fetchMovieList();
-    this.setState(() {
+    if (mounted) {this.setState(() {
       data = itemsData;
       snapshot = snap;
     });
+    }
 
     return "Success!";
+  }
+  @override
+  void dispose() {
+    super.dispose();
+
   }
 
  Future<ItemModel> fetchMovieList() async {
@@ -172,9 +188,46 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
 
   @override
   void initState() {
+   // flutterWebviewPlugin.close();
+
     super.initState();
     this.getData();
   }
+
+  launchUrl(String _url) async {
+
+    await inAppBrowser.open(url: _url, options: {
+              "useShouldOverrideUrlLoading": true,
+              "useOnLoadResource": true
+            });
+    // return  Container (
+    //       child:  InAppWebView(
+    //                 initialUrl: _url,
+    //                 initialHeaders: {
+
+    //                 },
+    //                 initialOptions: {
+
+    //                 },
+    //                 onWebViewCreated: (InAppWebViewController controller) {
+    //                   webView = controller;
+    //                 },
+    //                 onLoadStart: (InAppWebViewController controller, String _url) {
+    //                   print("started $_url");
+    //                   setState(() {
+    //                     this.url = url;
+    //                   });
+    //                 },
+    //                 onProgressChanged: (InAppWebViewController controller, int progress) {
+    //                   setState(() {
+    //                     this.progress = progress/100;
+    //                   });
+    //                 }
+    //                 )
+    
+    // );
+  }
+    
 
   Column buildButtonColumn(IconData icon) {
     Color color = Theme.of(context).primaryColor;
@@ -226,8 +279,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                                           padding: EdgeInsets.only(left: 4.0),
                                           child: Text(
                                             timeAgo.format
-                                            (DateTime.parse(data
-                                                .Articles[index].publishedAt)),
+                                            (DateTime.parse(data.Articles[index].publishedAt)),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w400,
                                               color: Colors.grey[600],
@@ -284,11 +336,9 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                                               ],
                                             ),
                                             onTap: () {
-                                              flutterWebviewPlugin.launch(
-                                                  data.Articles[index].url
-                                                  //fullScreen: false);
-                                                  );
-                                            },
+                                              String _url = data.Articles[index].url;
+                                              launchUrl(_url);
+                                              },
                                           ),
                                         ),
                                         Column(
@@ -299,10 +349,16 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                                               child: SizedBox(
                                                 height: 100.0,
                                                 width: 100.0,
-                                                child: Image.network(
-                                                  data.Articles[index].urlToImage,
-                                                  fit: BoxFit.cover,
-                                                ),
+                                                child: data.Articles[index].urlToImage != null?
+                                                FadeInImage.memoryNetwork(
+                                                  placeholder: kTransparentImage,
+                                                  image:  data.Articles[index].urlToImage,
+                                                          fit: BoxFit.cover,
+                                                ):
+                                                Image.asset(
+                                                      'assets/placeholder.jpg',
+                                                )
+                                                ,
                                               ),
                                             ),
                                             Row(
@@ -317,8 +373,10 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                                                           Icons.share)),
                                                   onTap: () {
                                                     Share.share(
-                                                        data.Articles[index].url);
-                                                  },
+                                                      data.Articles[index] != null?
+                                                        data.Articles[index].url:""
+                                                    );
+                                                  }
                                                 ),
                                                 GestureDetector(
                                                   child: Padding(
@@ -332,7 +390,9 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                                                               .bookmark_border)),
                                                   onTap: () {
                                                     _onBookmarkTap(
-                                                        data.Articles[index]);
+                                                        data.Articles[index] != null?
+                                                          data.Articles[index] : ""
+                                                    );                                                 
                                                   },
                                                 ),
                                                 GestureDetector(
@@ -376,6 +436,8 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                             ],
                           ),
                         ))
-        ]));
+        ]
+        )
+        );
   }
 }

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
-//import './ArticleSourceScreen.dart' as ArticleSourceScreen;
+//import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import './ArticleSourceScreen.dart' as ArticleSourceScreen;
 import './globalStore.dart' as globalStore;
 
 class SourceLibraryScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _SourceLibraryScreenState extends State<SourceLibraryScreen> {
   DataSnapshot snapshot;
   var sources;
   bool change = false;
-  final FlutterWebviewPlugin flutterWebviewPlugin = new FlutterWebviewPlugin();
+  //final FlutterWebviewPlugin flutterWebviewPlugin = new FlutterWebviewPlugin();
 
   Future getData() async {
     var libSources = await http.get(
@@ -106,7 +106,8 @@ class _SourceLibraryScreenState extends State<SourceLibraryScreen> {
       return new CircleAvatar(
         backgroundColor: Colors.transparent,
         backgroundImage: new NetworkImage(
-            "https://icons.better-idea.org/icon?url=" + url + "&size=120"),
+            "https://besticon-demo.herokuapp.com/icon?url=" + url + "&size=64..64..120"),
+            
         radius: 40.0,
       );
     } catch (Exception) {
@@ -169,7 +170,7 @@ class _SourceLibraryScreenState extends State<SourceLibraryScreen> {
                                     new SizedBox(
                                       child: new Container(
                                         child: _loadAvatar(
-                                            sources['sources'][index]['url']),
+                                            sources['sources'][index]['url'].toString().substring(11,sources['sources'][index]['url'].length)),
                                         padding: const EdgeInsets.only(
                                             left: 10.0, top: 12.0, right: 10.0),
                                       ),
@@ -202,9 +203,9 @@ class _SourceLibraryScreenState extends State<SourceLibraryScreen> {
                         ],
                       ),
                       onTap: () {
-                       /*  Navigator.push(
+                        Navigator.push(
                             context,
-                            /* new MaterialPageRoute(
+                            new MaterialPageRoute(
                                 builder: (_) =>
                                     new ArticleSourceScreen.ArticleSourceScreen(
                                       sourceId: sources['sources'][index]['id'],
@@ -212,8 +213,8 @@ class _SourceLibraryScreenState extends State<SourceLibraryScreen> {
                                           ['name'],
                                       isCategory: false,
                                     )
-                                    ) */
-                                    ); */
+                                    ) 
+                                    ); 
                       },
                     ),
                   ),
